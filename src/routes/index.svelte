@@ -1,56 +1,53 @@
 <script lang="ts">
-  import { goto, stores } from '@sapper/app'
-  import { onMount } from 'svelte'
+  import { goto, stores } from '@sapper/app';
+  import { onMount } from 'svelte';
 
-  const { session } = stores()
-  const { PULSAR_INSTANCE } = $session
+  const { session } = stores();
+  const { apiInstance } = $session;
 
   onMount(() => {
     // Fix tab key in textarea
     document.querySelector('textarea').addEventListener('keydown', function (e) {
       if (e.key.toLowerCase() === 'tab') {
-        e.preventDefault()
+        e.preventDefault();
 
-        const start = this.selectionStart
-        const end = this.selectionEnd
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
 
         // Set textarea value to: text before caret + tab + text after caret
         this.value = this.value.substring(0, start) +
-          "\t" + this.value.substring(end)
+          "\t" + this.value.substring(end);
 
         // Move caret to right position
         this.selectionStart = this.selectionEnd = start + 1;
       }
-    })
+    });
 
-    const saveButton = document.querySelector('button#save')
+    const saveButton = document.querySelector('button#save');
 
-    saveButton.addEventListener('click', async function (e) {
-      const textarea = document.querySelector('textarea')
+    saveButton.addEventListener('click', async function() {
+      const textarea = document.querySelector('textarea');
 
       if (textarea.value !== "") {
-        const resp: Response = await window.fetch(
-          `${PULSAR_INSTANCE}/api/v1/documents/`,
-          {
-            method: 'POST',
-            body: JSON.stringify({
-              content: textarea.value,
-              extension: 'txt'
-            }),
-            headers: {
-              'Content-Type': 'application/json'
-            }
-          }
-        )
+        const resp: Response = await window.fetch(`${apiInstance}/v1/documents/`, {
+          method: 'POST',
+          body: JSON.stringify({
+            content: textarea.value,
+            extension: 'none'
+          }),
+          headers: {
+            'Content-Type': 'application/json'
+          },
+        });
 
-        const body = await resp.json()
+        const body = await resp.json();
 
         if (resp.status === 201 && body.payload.id) {
-          await goto(`/${body.payload.id}`)
+          await goto(`/${body.payload.id}`);
         }
       }
-    })
-  })
+    });
+  });
 </script>
 
 <header>

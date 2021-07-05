@@ -1,32 +1,37 @@
 <script context="module" lang="ts">
   export async function preload(page, session) {
-    const { PULSAR_INSTANCE } = session
-    const { document: slug } = page.params
+    const { apiInstance } = session;
+    const { document: slug } = page.params;
 
     if (slug.length !== 8) {
       throw new Error(
-        `Document ID is not long enough; is ${slug.length}, must be 8`
-      )
+        `Document ID is not long enough; is ${slug.length}, must be 8`,
+      );
     }
 
-    const resp: Response = await this.fetch(
-      `${PULSAR_INSTANCE}/api/v1/documents/${slug}`
-    )
-    const code = await resp.json()
+    const resp: Response = await this.fetch(`${apiInstance}/v1/documents/${slug}`);
+    const code = await resp.json();
 
     if (resp.status === 500 || 404 && code.error === 'record not found') {
-      throw new Error(`Could not find document '${slug}'.`)
+      throw new Error(`Could not find document '${slug}'.`);
     }
 
-    const lines = code.payload.content.split('\n')
+    const lines = code.payload.content.split('\n');
 
-    return { code: code.payload.content, lines }
+    return {
+      code: code.payload.content,
+      extension: code.payload.extension,
+      lines,
+    }
   }
 </script>
 
 <script lang="ts">
-  export let code
-  export let lines
+  import Prism from 'prismjs';
+
+  export let code: string;
+  export let lines: string[];
+  export let extension: string;
 </script>
 
 <header>
@@ -56,5 +61,11 @@
     {/each}
   </div>
 
-  <pre><code>{code}</code></pre>
+  <pre><code>
+    {#if extension in Prism.languages}
+      {@html Prism.highlight(code, Prism.languages[extension], extension)}
+    {:else}
+      {code}
+    {/if}
+  </code></pre>
 </main>
